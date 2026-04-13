@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#140e28"/>
+      <stop offset="100%" style="stop-color:#0c0c0f"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c5cfc"/>
+      <stop offset="100%" style="stop-color:#c4b0ff"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <!-- Left weight plate -->
+  <rect x="136" y="194" width="48" height="124" rx="16" fill="url(#violet)"/>
+  <!-- Right weight plate -->
+  <rect x="328" y="194" width="48" height="124" rx="16" fill="url(#violet)"/>
+  <!-- Center bar -->
+  <rect x="184" y="234" width="144" height="44" rx="8" fill="url(#violet)"/>
+  <!-- Upward chevron arrow -->
+  <polygon points="256,108 196,188 226,188 226,194 286,194 286,188 316,188" fill="#00e5a0"/>
+</svg>
