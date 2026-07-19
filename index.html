@@ -2392,7 +2392,7 @@ function setSyncStatus(state, text) {
   ind.classList.add('show');
   if (state === 'syncing') { bar.className=''; bar.offsetHeight; bar.className='syncing'; }
   if (state === 'done')    { bar.className='done'; setTimeout(()=>{ bar.className=''; ind.classList.remove('show'); },1500); }
-  if (state === 'error')   { setTimeout(()=> ind.classList.remove('show'), 3000); }
+  if (state === 'error')   { bar.className=''; setTimeout(()=> ind.classList.remove('show'), 3000); } // reset bar — was left stuck mid-animation
 }
 
 async function gsPost(payload) {
@@ -2409,15 +2409,20 @@ async function gsPost(payload) {
   return json;
 }
 
+let _pendingSyncs = 0; // background syncs can overlap — only show "done" when the last one lands
+
 async function syncToSheets(payload) {
   // Always save to local cache immediately
+  _pendingSyncs++;
   setSyncStatus('syncing', 'saving…');
   try {
     await gsPost(payload);
-    setSyncStatus('done', 'synced ✓');
+    _pendingSyncs = Math.max(0, _pendingSyncs - 1);
+    if (_pendingSyncs === 0) setSyncStatus('done', 'synced ✓');
     updateQueueBadge();
   } catch(e) {
     // Offline or error — queue it
+    _pendingSyncs = Math.max(0, _pendingSyncs - 1);
     QUEUE.push(payload);
     saveQueue(QUEUE);
     setSyncStatus('error', 'queued');
