@@ -501,7 +501,7 @@ body.light .filter-dropdown { box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
   text-transform: uppercase; color: var(--muted);
 }
 .water-count-display {
-  font-family: var(--font-mono); font-size:12px; color: var(--accent2);
+  font-family: var(--font-mono); font-size:12px; color: var(--accent);
 }
 .water-controls {
   display: flex; align-items: center; justify-content: space-between;
@@ -510,7 +510,7 @@ body.light .filter-dropdown { box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
 .water-ctrl-btn {
   width: 44px; height: 44px; border-radius: 50%;
   background: rgba(91,148,247,0.12); border: 1px solid rgba(91,148,247,0.22);
-  color: var(--accent2); font-size: 22px; cursor: pointer;
+  color: var(--accent); font-size: 22px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s; flex-shrink: 0;
 }
@@ -551,7 +551,7 @@ body.light .filter-dropdown { box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
 .water-day-label {
   font-family: var(--font-mono); font-size:9px; color: var(--muted);
 }
-.water-day-label.today { color: var(--accent2); font-weight: 600; }
+.water-day-label.today { color: var(--accent); font-weight: 600; }
 
 /* ── Meal Blocks ── */
 .day-macro-bar {
@@ -1199,7 +1199,7 @@ body.light .picker-drum-wrap::after  { background: linear-gradient(to top, var(-
 .win-chip.accent-chip {
   background: rgba(91,148,247,0.07);
   border-color: rgba(91,148,247,0.22);
-  color: var(--accent2);
+  color: var(--accent);
 }
 body.light .win-chip { background: var(--surface); }
 body.light .win-chip.highlight { background: rgba(0,180,100,0.07); }
@@ -1550,7 +1550,7 @@ body.light .fab-item-label {
     <div class="kpi-grid">
       <div class="kpi"><div class="kpi-label">Avg Calories</div><div class="kpi-value orange" id="d-avg-cal">—</div><div class="kpi-sub" id="d-cal-target">/ — target</div></div>
       <div class="kpi"><div class="kpi-label">Avg Protein</div><div class="kpi-value green" id="d-avg-pro">—</div><div class="kpi-sub" id="d-pro-target">/ — g</div></div>
-      <div class="kpi"><div class="kpi-label">Avg Carbs</div><div class="kpi-value" style="color:var(--accent2)" id="d-avg-carbs">—</div><div class="kpi-sub">g / day</div></div>
+      <div class="kpi"><div class="kpi-label">Avg Carbs</div><div class="kpi-value" style="color:var(--accent)" id="d-avg-carbs">—</div><div class="kpi-sub">g / day</div></div>
       <div class="kpi"><div class="kpi-label">Avg Fat</div><div class="kpi-value yellow" id="d-avg-fat">—</div><div class="kpi-sub">g / day</div></div>
     </div>
     <div class="card"><div class="card-title">Daily Calories</div><div class="mini-chart" id="d-cal-chart"></div></div>
@@ -1684,7 +1684,7 @@ body.light .fab-item-label {
           <div style="text-align:right">
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Last</div>
             <div style="font-family:var(--font-mono);font-size:12px;color:var(--accent)" id="ex-logger-last">—</div>
-            <div style="font-family:var(--font-mono);font-size:11px;color:var(--green);margin-top:2px" id="ex-logger-best" style="display:none">—</div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--green);margin-top:2px;display:none" id="ex-logger-best">—</div>
           </div>
         </div>
 
@@ -2235,31 +2235,6 @@ body.light .fab-item-label {
 
 </div><!-- /app -->
 
-  <!-- WORKOUTS TAB -->
-      <div id="hist-tab-workouts" style="display:none">
-        <div class="kpi-grid">
-          <div class="kpi"><div class="kpi-label">Total Sessions</div><div class="kpi-value accent" id="h-sessions">—</div><div class="kpi-sub">workouts logged</div></div>
-          <div class="kpi"><div class="kpi-label">Total Volume</div><div class="kpi-value orange" id="h-volume">—</div><div class="kpi-sub">lbs lifted total</div></div>
-          <div class="kpi"><div class="kpi-label">Total Sets</div><div class="kpi-value green" id="h-sets">—</div><div class="kpi-sub">sets completed</div></div>
-          <div class="kpi"><div class="kpi-label">Avg / Week</div><div class="kpi-value yellow" id="h-per-week">—</div><div class="kpi-sub">sessions / week</div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Weekly Volume (lbs)</div>
-          <canvas id="chart-volume" height="180"></canvas>
-        </div>
-        <div class="card">
-          <div class="card-title">Volume by Muscle Group</div>
-          <canvas id="chart-muscles" height="220"></canvas>
-        </div>
-        <div class="card">
-          <div class="card-title">Top 5 Exercises by Volume</div>
-          <canvas id="chart-top-ex" height="200"></canvas>
-        </div>
-      </div>
-
-    </div><!-- /history-content -->
-  </div>
-
 <nav id="nav">
   <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard',this)">
     <i class="ti ti-chart-bar"></i>
@@ -2427,7 +2402,11 @@ async function gsPost(payload) {
     headers: {'Content-Type':'text/plain'} // avoid preflight CORS
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const json = await res.json();
+  // GAS returns HTTP 200 even on failure (e.g. {status:'unauthorized'}) —
+  // treat any non-ok status as an error so the write gets queued, not lost.
+  if (json && json.status && json.status !== 'ok') throw new Error('GAS: ' + json.status);
+  return json;
 }
 
 async function syncToSheets(payload) {
@@ -2569,11 +2548,13 @@ function renderPage(name) {
 }
 
 // TOAST
+let _toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2400);
+  clearTimeout(_toastTimer); // don't let an earlier toast's timer cut this one short
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2672,17 +2653,17 @@ function renderDashboard() {
 
   // NUTRITION
   const meals = DB.meals.filter(m => m.date >= range.from && m.date <= range.to);
-  const daysWithMeals = new Set(meals.map(m=>m.date)).size || 1;
+  const daysWithMeals = new Set(meals.map(m=>m.date)).size; // 0 when nothing logged in range
   const totCal   = meals.reduce((a,m)=>a+(m.cal||0),0);
   const totPro   = meals.reduce((a,m)=>a+(m.pro||0),0);
   const totCarbs = meals.reduce((a,m)=>a+(m.carbs||0),0);
   const totFat   = meals.reduce((a,m)=>a+(m.fat||0),0);
-  document.getElementById('d-avg-cal').textContent   = daysWithMeals>1 ? Math.round(totCal/daysWithMeals) : '—';
+  document.getElementById('d-avg-cal').textContent   = daysWithMeals ? Math.round(totCal/daysWithMeals) : '—';
   document.getElementById('d-cal-target').textContent = '/ '+s.calTarget+' target';
-  document.getElementById('d-avg-pro').textContent   = daysWithMeals>1 ? Math.round(totPro/daysWithMeals)+'g' : '—';
+  document.getElementById('d-avg-pro').textContent   = daysWithMeals ? Math.round(totPro/daysWithMeals)+'g' : '—';
   document.getElementById('d-pro-target').textContent = '/ '+s.proTarget+'g target';
-  document.getElementById('d-avg-carbs').textContent = daysWithMeals>1 ? Math.round(totCarbs/daysWithMeals)+'g' : '—';
-  document.getElementById('d-avg-fat').textContent   = daysWithMeals>1 ? Math.round(totFat/daysWithMeals)+'g' : '—';
+  document.getElementById('d-avg-carbs').textContent = daysWithMeals ? Math.round(totCarbs/daysWithMeals)+'g' : '—';
+  document.getElementById('d-avg-fat').textContent   = daysWithMeals ? Math.round(totFat/daysWithMeals)+'g' : '—';
   const calByDay = dates.map(d => meals.filter(m=>m.date===d).reduce((a,m)=>a+(m.cal||0),0));
   const proByDay = dates.map(d => meals.filter(m=>m.date===d).reduce((a,m)=>a+(m.pro||0),0));
   miniBarChart(document.getElementById('d-cal-chart'), calByDay, 'var(--orange)', s.calTarget);
@@ -3538,7 +3519,15 @@ async function deleteWorkout(id) {
 const MT_KEY = 'fitlog_meal_templates_v1';
 
 function loadMealTemplates() {
-  try { const r = localStorage.getItem(MT_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  try {
+    const r = localStorage.getItem(MT_KEY);
+    if (r) {
+      const ts = JSON.parse(r);
+      // Migration: older code stored template contents under `foods` — canonical key is `items`
+      ts.forEach(t => { if (!t.items) t.items = t.foods || []; delete t.foods; });
+      return ts;
+    }
+  } catch(e) {}
   return [];
 }
 function saveMealTemplates_local(t) { localStorage.setItem(MT_KEY, JSON.stringify(t)); }
@@ -4008,7 +3997,7 @@ function renderFLTemplatesSection() {
   listEl.innerHTML = filtered.map(t => {
     const totals = calcTemplateTotals(t);
     const catObj = MEAL_CATS.find(c => c.id === t.mealType) || {};
-    const foodStr = t.foods.map(f => f.name).join(' · ') || '—';
+    const foodStr = (t.items || []).map(f => f.name).join(' · ') || '—';
     return `<div class="meal-tmpl-card">
       <div class="meal-tmpl-header">
         <div style="min-width:0;flex:1">
@@ -4112,10 +4101,10 @@ function flSaveTemplate() {
   if (!flNewTemplateFoods.length) { toast('⚠️ Add at least one food'); return; }
   if (flEditingTemplateId) {
     const idx = MEAL_TEMPLATES.findIndex(t => t.id === flEditingTemplateId);
-    if (idx >= 0) MEAL_TEMPLATES[idx] = { ...MEAL_TEMPLATES[idx], name, mealType, foods: [...flNewTemplateFoods] };
+    if (idx >= 0) MEAL_TEMPLATES[idx] = { ...MEAL_TEMPLATES[idx], name, mealType, items: [...flNewTemplateFoods] };
     toast('✅ Template updated!');
   } else {
-    MEAL_TEMPLATES.push({ id: uid(), name, mealType, foods: [...flNewTemplateFoods] });
+    MEAL_TEMPLATES.push({ id: uid(), name, mealType, items: [...flNewTemplateFoods] });
     toast('✅ Template saved!');
   }
   saveMealTemplates(MEAL_TEMPLATES);
@@ -4156,7 +4145,7 @@ function renderFLFoodsSection() {
           <div class="log-icon" style="background:${bg};font-size:15px">🥗</div>
           <div class="log-body">
             <div class="log-title">${f.name}</div>
-            <div class="log-meta">${f.unit} · ${f.cal} kcal · P${f.pro}g · C${f.carbs}g · F${f.fat}g${f.cat ? ' · <span style="color:var(--accent2)">' + f.cat + '</span>' : ''}</div>
+            <div class="log-meta">${f.unit} · ${f.cal} kcal · P${f.pro}g · C${f.carbs}g · F${f.fat}g${f.cat ? ' · <span style="color:var(--accent)">' + f.cat + '</span>' : ''}</div>
           </div>
           <button class="log-delete" onclick="deleteFood(${idx})">🗑</button>
         </div>`;
@@ -4280,249 +4269,6 @@ function saveWeekPlan(plan) {
   localStorage.setItem(WEEK_PLAN_KEY, JSON.stringify(plan));
   syncToSheets({ sheet:'Settings', action:'upsert_key',
     row:['weekPlan', JSON.stringify(plan), Date.now()] });
-}
-
-function renderWorkoutTemplatesPage() {
-  const el = document.getElementById('wkt-templates-list');
-  if (!el) return; // element removed — weekly schedule deprecated
-  const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const DAY_FULL   = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const plan       = loadWeekPlan();
-  const workoutTypes = TEMPLATES.filter(t => !t.rest);
-  const expanded   = window._expandedWktType || null;
-  const dayEditing = window._editingDay != null ? window._editingDay : null;
-
-  // ── Week Strip ──
-  const stripHTML = DAY_NAMES.map((d,i) => {
-    const tid = plan[i];
-    const t   = workoutTypes.find(x => x.id === tid);
-    const isRest = !t;
-    const color  = isRest ? '#6B7280' : t.color;
-    const icon   = isRest ? '😴' : t.icon;
-    const lbl    = isRest ? 'Rest' : (t.name.replace(/Day \d+ — /,'')).split(' ')[0];
-    const isEditing = dayEditing === i;
-    return `<button onclick="openDayEditor(${i})" style="background:${isEditing ? color+'33' : color+'18'};border:1px solid ${isEditing ? color+'88' : color+'33'};border-radius:12px;padding:9px 2px;text-align:center;cursor:pointer;transition:all 0.15s;width:100%">
-      <div style="font-size:18px;margin-bottom:4px">${icon}</div>
-      <div style="font-size:9px;font-weight:700;color:${isRest ? 'var(--muted)' : 'var(--text)'};text-transform:uppercase;letter-spacing:.05em;line-height:1.2">${d}</div>
-      <div style="font-size:8px;color:${isRest ? 'var(--muted)' : color};font-family:var(--font-mono);margin-top:2px;letter-spacing:0">${lbl}</div>
-    </button>`;
-  }).join('');
-
-  // ── Day Editor (inline, appears below strip) ──
-  let dayEditorHTML = '';
-  if (dayEditing !== null) {
-    const curTid = plan[dayEditing];
-    const opts = [
-      ...workoutTypes.map(t => ({
-        id: t.id, icon: t.icon,
-        name: t.name.replace(/Day \d+ — /,''),
-        sub: t.focus, color: t.color
-      })),
-      { id:'rest', icon:'😴', name:'Rest Day', sub:'Recovery · No workout', color:'#6B7280' }
-    ];
-    dayEditorHTML = `
-    <div style="padding:0 14px;margin-bottom:4px">
-      <div class="card" style="padding:14px;border-color:rgba(91,148,247,0.22)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:14px;font-weight:700;letter-spacing:-0.02em">${DAY_FULL[dayEditing]}</div>
-          <button onclick="closeDayEditor()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:0">×</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${opts.map(o => {
-            const active = curTid === o.id;
-            return `<button onclick="assignDay(${dayEditing},'${o.id}')"
-              style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:10px;border:1px solid ${active ? o.color+'88' : 'var(--border)'};background:${active ? o.color+'20' : 'var(--surface2)'};cursor:pointer;transition:all 0.15s;text-align:left;width:100%">
-              <span style="font-size:20px;flex-shrink:0">${o.icon}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:12px;font-weight:700;color:var(--text)">${o.name}</div>
-                <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${o.sub}</div>
-              </div>
-              ${active ? `<span style="font-size:14px;color:${o.color};flex-shrink:0">✓</span>` : ''}
-            </button>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ── Workout Type Cards ──
-  const typeCardsHTML = workoutTypes.map(t => {
-    const isExp = expanded === t.id;
-    const usedOn = plan.reduce((acc,tid,i) => { if(tid===t.id) acc.push(DAY_NAMES[i]); return acc; }, []);
-
-    const exListHTML = t.exercises.length
-      ? t.exercises.map((ex,i) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(91,148,247,0.07)">
-          <div style="width:22px;height:22px;border-radius:6px;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${t.color};flex-shrink:0">${i+1}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--text)">${ex.name}</div>
-            <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${ex.sets} sets · ${ex.repRange} reps</div>
-          </div>
-          <button onclick="removeExFromWkt('${t.id}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;line-height:1;transition:color 0.15s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-        </div>`).join('')
-      : `<div style="padding:16px 0;text-align:center;color:var(--muted);font-size:12px">No exercises yet</div>`;
-
-    const exPickerOpts = DB.exercises.map(e =>
-      `<option value="${e.name.replace(/"/g,'&quot;')}">${e.name}</option>`
-    ).join('') + `<option value="__custom__">— Custom name…</option>`;
-
-    const addFormHTML = `
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(91,148,247,0.1)">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Add Exercise</div>
-        <div class="form-group">
-          <select class="form-select" id="tex-pick-${t.id}" onchange="handleTexCustom('${t.id}')">
-            ${exPickerOpts}
-          </select>
-        </div>
-        <div id="tex-custom-wrap-${t.id}" style="display:none;margin-bottom:8px">
-          <input class="form-input" id="tex-custom-${t.id}" placeholder="Exercise name…">
-        </div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div><label class="form-label">Sets</label><input class="form-input" type="number" id="tex-sets-${t.id}" value="3" min="1" max="20" style="text-align:center"></div>
-          <div><label class="form-label">Rep Range</label><input class="form-input" id="tex-reps-${t.id}" value="8–12" placeholder="e.g. 8–12"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addExToWkt('${t.id}')" style="width:100%">
-          + Add to ${t.name.replace(/Day \d+ — /,'')}
-        </button>
-      </div>`;
-
-    return `
-    <div class="card" style="margin:0 14px 10px;border-color:${t.color}30">
-      <div onclick="toggleWktExpand('${t.id}')" style="display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none">
-        <div style="width:44px;height:44px;border-radius:12px;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 12px ${t.color}22">${t.icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.02em">${t.name.replace(/Day \d+ — /,'')}</div>
-          <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-top:1px">${t.focus}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;margin-right:8px">
-          <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${t.exercises.length} ex</div>
-          ${usedOn.length ? `<div style="font-size:11px;color:${t.color};margin-top:2px;font-weight:600">${usedOn.join(' · ')}</div>` : `<div style="font-size:11px;color:var(--muted);margin-top:2px">unscheduled</div>`}
-        </div>
-        <div style="color:var(--muted);font-size:20px;transition:transform 0.2s;transform:rotate(${isExp?'90':'0'}deg);flex-shrink:0">›</div>
-      </div>
-      ${isExp ? `<div style="margin-top:2px">${exListHTML}${addFormHTML}</div>` : ''}
-    </div>`;
-  }).join('');
-
-  el.innerHTML = `
-    <!-- Week plan strip -->
-    <div style="padding:0 14px;margin-bottom:4px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Weekly Schedule</div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:4px">${stripHTML}</div>
-      <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);text-align:center;margin-top:6px;margin-bottom:2px">tap a day to change its workout</div>
-    </div>
-
-    ${dayEditorHTML}
-
-    <!-- Workout types -->
-    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 14px 10px;display:flex;align-items:center;gap:10px">
-      Workout Types
-      <span style="flex:1;height:1px;background:linear-gradient(to right,rgba(91,148,247,0.22),transparent)"></span>
-    </div>
-    ${typeCardsHTML}
-    <button class="template-manage-btn" onclick="showAddWktType()">＋ Add Workout Type</button>
-    <div id="add-wkt-type-form" style="display:none;padding:0 14px;margin-bottom:12px">
-      <div class="card">
-        <div class="card-title">New Workout Type</div>
-        <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="new-wt-name" placeholder="e.g. Push, Full Body, Cardio…"></div>
-        <div class="form-row">
-          <div><label class="form-label">Focus muscles</label><input class="form-input" id="new-wt-focus" placeholder="e.g. Chest · Shoulders"></div>
-          <div style="flex:0 0 72px"><label class="form-label">Icon</label><input class="form-input" id="new-wt-icon" placeholder="💪" style="text-align:center"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-          <button class="btn btn-secondary" onclick="hideAddWktType()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveNewWktType()">Create</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function openDayEditor(i) {
-  if (window._editingDay === i) { window._editingDay = null; }
-  else { window._editingDay = i; }
-  renderWorkoutTemplatesPage();
-  // Scroll day editor into view
-  setTimeout(() => {
-    const el = document.querySelector('#wkt-templates-list .card[style*="rgba(91,148,247,0.22)"]');
-    if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
-  }, 50);
-}
-
-function closeDayEditor() {
-  window._editingDay = null;
-  renderWorkoutTemplatesPage();
-}
-
-function assignDay(dayIdx, templateId) {
-  const plan = loadWeekPlan();
-  plan[dayIdx] = templateId;
-  saveWeekPlan(plan);
-  window._editingDay = null;
-  renderWorkoutTemplatesPage();
-  toast('✅ Schedule updated');
-}
-
-function toggleWktExpand(id) {
-  window._expandedWktType = window._expandedWktType === id ? null : id;
-  renderWorkoutTemplatesPage();
-}
-
-function handleTexCustom(templateId) {
-  const pick = document.getElementById('tex-pick-' + templateId);
-  const wrap = document.getElementById('tex-custom-wrap-' + templateId);
-  if (pick && wrap) wrap.style.display = pick.value === '__custom__' ? '' : 'none';
-}
-
-function addExToWkt(templateId) {
-  const t = TEMPLATES.find(x => x.id === templateId);
-  if (!t) return;
-  const pick   = document.getElementById('tex-pick-' + templateId);
-  const custom = document.getElementById('tex-custom-' + templateId);
-  const setsEl = document.getElementById('tex-sets-' + templateId);
-  const repsEl = document.getElementById('tex-reps-' + templateId);
-  const name   = pick.value === '__custom__' ? (custom?.value.trim()||'') : pick.value;
-  if (!name) { toast('⚠️ Enter an exercise name'); return; }
-  t.exercises.push({ name, sets: parseInt(setsEl?.value)||3, repRange: repsEl?.value.trim()||'8–12' });
-  saveTemplates(TEMPLATES);
-  window._expandedWktType = templateId;
-  renderWorkoutTemplatesPage();
-  toast('✅ ' + name + ' added');
-}
-
-function removeExFromWkt(templateId, idx) {
-  const t = TEMPLATES.find(x => x.id === templateId);
-  if (!t) return;
-  const ex = t.exercises[idx];
-  if (!confirm('Remove "' + (ex?.name||'this exercise') + '"?')) return;
-  t.exercises.splice(idx, 1);
-  saveTemplates(TEMPLATES);
-  window._expandedWktType = templateId;
-  renderWorkoutTemplatesPage();
-  toast('Removed');
-}
-
-function showAddWktType() {
-  const f = document.getElementById('add-wkt-type-form');
-  if (f) f.style.display = '';
-}
-function hideAddWktType() {
-  const f = document.getElementById('add-wkt-type-form');
-  if (f) f.style.display = 'none';
-}
-function saveNewWktType() {
-  const name = document.getElementById('new-wt-name')?.value.trim();
-  if (!name) { toast('⚠️ Enter a name'); return; }
-  const focus = document.getElementById('new-wt-focus')?.value.trim() || '';
-  const icon  = document.getElementById('new-wt-icon')?.value.trim()  || '💪';
-  const palette = ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444','#EC4899','#06B6D4','#F97316'];
-  const color = palette[TEMPLATES.filter(t=>!t.rest).length % palette.length];
-  const id    = 'wt_' + Date.now();
-  TEMPLATES.push({ id, name, icon, color, focus, exercises:[], rest:false });
-  saveTemplates(TEMPLATES);
-  hideAddWktType();
-  renderWorkoutTemplatesPage();
-  toast('✅ ' + name + ' created');
 }
 
 // ── Exercise Library (EXL) — tabbed layout ──────────────────────
@@ -4942,15 +4688,15 @@ function importCSV(type, input) {
         if (!r.template_name || !r.food_name) return;
         const key = r.template_name.toLowerCase();
         if (!tmplMap[key]) {
-          const entry = { name: r.template_name, mealType: r.meal_type || 'Breakfast', foods: [] };
+          const entry = { name: r.template_name, mealType: r.meal_type || 'Breakfast', items: [] };
           tmplMap[key] = entry;
           ordered.push(entry);
         }
-        tmplMap[key].foods.push({ name: r.food_name, serving: parseFloat(r.serving) || 1 });
+        tmplMap[key].items.push({ name: r.food_name, serving: parseFloat(r.serving) || 1 });
       });
       ordered.forEach(t => {
         if (existingNames.has(t.name.toLowerCase())) { skipped++; return; }
-        MEAL_TEMPLATES.push({ id: uid(), name: t.name, mealType: t.mealType, foods: t.foods });
+        MEAL_TEMPLATES.push({ id: uid(), name: t.name, mealType: t.mealType, items: t.items });
         existingNames.add(t.name.toLowerCase());
         added++;
       });
@@ -5078,7 +4824,6 @@ async function addWater() {
   if (current >= target + 4) { toast('\ud83d\udca7 Max reached for today'); return; }
   w[t] = current + 1;
   saveWater(w);
-  renderWater();
   syncWaterToSheets();
   if (w[t] === target) toast('\ud83d\udca7 Water goal reached!');
   else toast(`\ud83d\udca7 ${w[t]} / ${target} cups`);
@@ -5089,40 +4834,8 @@ function removeWater() {
   if (!w[t]) { toast('Nothing to undo'); return; }
   w[t] = Math.max(0, (w[t] || 0) - 1);
   saveWater(w);
-  renderWater();
   syncWaterToSheets();
   toast(`\ud83d\udca7 ${w[t]} / ${getWaterTarget()} cups`);
-}
-
-function renderWater() {
-  const cups   = getTodayWater();
-  const target = getWaterTarget();
-  const pct    = Math.min(100, Math.round(cups / target * 100));
-
-  const weekEl = document.getElementById('dash-water-week');
-  if (!weekEl) return;
-
-  const water = loadWater();
-  const days  = [];
-  const dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  for (let i = 6; i >= 0; i--) {
-    const d  = new Date(); d.setDate(d.getDate() - i);
-    const ds = localDate(d);
-    days.push({ ds, cups: water[ds] || 0, label: dayNames[d.getDay()], isToday: i === 0 });
-  }
-
-  const maxCups = Math.max(...days.map(d => d.cups), target, 1);
-  weekEl.innerHTML = days.map(d => {
-    const barH = d.cups > 0 ? Math.max(8, Math.round(d.cups / maxCups * 36)) : 0;
-    const atTarget = d.cups >= target;
-    return `<div class="water-day-wrap">
-      <div class="water-day-bar-track">
-        <div class="water-day-bar${d.isToday ? ' today' : ''}"
-          style="height:${barH}px;${atTarget ? 'background:var(--green)' : ''}"></div>
-      </div>
-      <div class="water-day-label${d.isToday ? ' today' : ''}">${d.label}</div>
-    </div>`;
-  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5429,7 +5142,11 @@ function getActivityStreak() {
   for (let i = 0; i < 365; i++) {
     const ds = localDate(d);
     const active = DB.workouts.some(w => w.date === ds) || DB.meals.some(m => m.date === ds);
-    if (!active) break;
+    if (!active) {
+      // An empty *today* just means nothing's logged yet — don't reset the streak
+      if (i === 0) { d.setDate(d.getDate() - 1); continue; }
+      break;
+    }
     streak++;
     d.setDate(d.getDate() - 1);
   }
@@ -5460,40 +5177,6 @@ function getWeekDots() {
     });
   }
   return dots;
-}
-
-function getNutritionStatus(calPct, proPct) {
-  const avg = (calPct + proPct) / 2;
-  if (calPct > 1.1)                      return { label:'Over Calories',  cls:'behind',   dot:'🔴' };
-  if (avg >= 0.9)                        return { label:'Goals Hit',       cls:'on-track', dot:'🟢' };
-  if (avg >= 0.6)                        return { label:'On Track',        cls:'on-track', dot:'🟢' };
-  if (avg >= 0.35)                       return { label:'In Progress',     cls:'close',    dot:'🟡' };
-  return                                        { label:'Not Started',     cls:'behind',   dot:'🔴' };
-}
-
-/**
- * Returns a coaching status object based on today's nutrition + workout progress.
- * { label, cls, dot }  where cls maps to a CSS class on .status-badge
- */
-function getTodayStatus(todayMeals, calTarget, proTarget, workoutLogged, tmpl) {
-  const totCal = todayMeals.reduce((a,m)=>a+(m.cal||0),0);
-  const totPro = todayMeals.reduce((a,m)=>a+(m.pro||0),0);
-  const calPct = calTarget  ? totCal / calTarget  : 0;
-  const proPct = proTarget  ? totPro / proTarget  : 0;
-
-  const isRestDay    = !tmpl || tmpl.rest;
-  const wktDone      = workoutLogged > 0;
-
-  // Score: nutrition 60%, workout 40%
-  const nutScore  = Math.min(1, (calPct * 0.5 + proPct * 0.5));
-  const wktScore  = isRestDay ? 1 : (wktDone ? 1 : 0);
-  const overall   = nutScore * 0.6 + wktScore * 0.4;
-
-  if (isRestDay && nutScore >= 0.8)    return { label:'Rest Day · On Track',  cls:'rest-day', dot:'😴' };
-  if (isRestDay)                        return { label:'Rest Day',              cls:'rest-day', dot:'😴' };
-  if (overall >= 0.75)                  return { label:'On Track',              cls:'on-track', dot:'🟢' };
-  if (overall >= 0.45)                  return { label:'Close to Goal',         cls:'close',    dot:'🟡' };
-  return                                       { label:'Behind Today',          cls:'behind',   dot:'🔴' };
 }
 
 /**
@@ -6053,8 +5736,9 @@ async function saveBodyFromModal() {
 
 async function addWaterFromHome() {
   await addWater();
-  invalidateCache(['home']);
+  invalidateCache(['home','meals']);
   renderHomePage();
+  renderMealsWater(); // keep the Nutrition page water card fresh (FAB works from any page)
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6066,8 +5750,6 @@ applyTheme();
 // Render immediately with whatever is in localStorage
 renderHomePage();
 updateQueueBadge();
-renderWater();
-
 // Pull everything fresh from Google Sheets, then force re-render
 (async () => {
   await Promise.all([
@@ -6078,7 +5760,6 @@ renderWater();
   invalidateCache();
   // Re-render all visible data
   renderHomePage();
-  renderWater();
   updateQueueBadge();
   // Also pre-render dashboard so it's instant when user taps it
   renderDashboard();
@@ -6092,7 +5773,6 @@ const PICKER_SPACER_H = 88; // (220px drum height - 44px item) / 2
 const PICKER_CFG = {
   reps:   { title: 'Reps',         hint: field => `Last: ${field} reps`,   values: Array.from({length:30}, (_,i) => i+1) },
   weight: { title: 'Weight (lbs)', hint: field => `Last: ${field} lbs`,    values: (() => { const v=[]; for(let w=0;w<=500;w+=2.5) v.push(+w.toFixed(1)); return v; })() },
-  rpe:    { title: 'RPE',          hint: field => `Last: ${field}`,         values: [6,6.5,7,7.5,8,8.5,9,9.5,10] }
 };
 
 let pickerRowIdx = -1;
@@ -6269,7 +5949,7 @@ function fabTrigger(action) {
 
     <div class="fab-item" onclick="fabTrigger('water')">
       <span class="fab-item-label">Add Water</span>
-      <button class="fab-item-btn" style="background:rgba(133,186,255,0.18);color:var(--accent2);border-color:rgba(133,186,255,0.25)">
+      <button class="fab-item-btn" style="background:rgba(133,186,255,0.18);color:var(--accent);border-color:rgba(133,186,255,0.25)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="22" height="22" stroke-width="1.8"><path d="M12 2C6 8 4 12 4 15a8 8 0 0016 0c0-3-2-7-8-13z"/></svg>
       </button>
     </div>
