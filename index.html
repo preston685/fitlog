@@ -3331,18 +3331,17 @@ async function saveExerciseAndNext() {
   invalidateCache(['home','dashboard','workout']);
   sessionLog[activeExIndex] = {exercise: ex.name, sets: validSets, saved: true};
 
-  // Sync each set to Sheets
-  for (const s of validSets) {
+  // Sync all sets in ONE background call — UI advances immediately;
+  // failures land in the offline queue via syncToSheets' catch.
+  const rows = validSets.map(s => {
     const vol  = (parseFloat(s.weight)||0) * (parseInt(s.reps)||0);
     const e1rm = (parseFloat(s.weight)||0) > 0
       ? parseFloat(s.weight) * (1 + (parseInt(s.reps)||0) / 30) : 0;
-    await syncToSheets({
-      sheet: 'Workouts', action: 'append',
-      row: [id, today(), activeTemplate.name, ex.name, exObj.muscle||'',
-            s.reps, s.weight, s.rpe, vol.toFixed(0), e1rm.toFixed(1), notes, ts,
-            currentSessionId || id]   // session_id groups all exercises in one session
-    });
-  }
+    return [id, today(), activeTemplate.name, ex.name, exObj.muscle||'',
+            s.reps, s.weight, s.rpe || '', vol.toFixed(0), e1rm.toFixed(1), notes, ts,
+            currentSessionId || id];  // session_id groups all exercises in one session
+  });
+  syncToSheets({ sheet: 'Workouts', action: 'append_rows', rows });
 
   // Check for PR — show special toast if new best weight
   const prWeight = checkForPR(ex.name, validSets);
@@ -3492,10 +3491,8 @@ async function deleteWorkoutGroup(exEncoded, date) {
   saveDB(DB);
   invalidateCache(['home','dashboard','workout']);
 
-  // Sync each deletion to Sheets
-  for (const id of ids) {
-    await syncToSheets({sheet:'Workouts', action:'delete', id});
-  }
+  // One background call deletes all ids (Code.gs accepts an ids array)
+  syncToSheets({sheet:'Workouts', action:'delete', ids});
 
   renderTodayWorkouts();
   toast(`Deleted ${exercise}`);
@@ -3506,7 +3503,7 @@ async function deleteWorkout(id) {
   DB.workouts = DB.workouts.filter(w => w.id !== id);
   saveDB(DB);
   invalidateCache(['home','dashboard','workout']);
-  await syncToSheets({sheet:'Workouts', action:'delete', id});
+  syncToSheets({sheet:'Workouts', action:'delete', id});
   renderTodayWorkouts();
   toast('Deleted');
 }
@@ -3836,7 +3833,7 @@ async function confirmLogFood(foodName) {
   DB.meals.push(entry);
   saveDB(DB);
   invalidateCache(['home','dashboard','meals']);
-  await syncToSheets({
+  syncToSheets({
     sheet: 'Meals', action: 'append',
     row: [id, today(), mealsAddingTo, food.name, serving,
           entry.cal, entry.pro, entry.carbs, entry.fat, entry.fiber, ts]
@@ -3870,8 +3867,7 @@ function calcTemplateTotals(tmpl, overrides) {
 async function logMealTemplate() {
   const tmpl = activeMealTmpl;
   const ts   = Date.now();
-  let totalCal=0, totalPro=0, totalCarbs=0, totalFat=0;
-  let itemCount = 0;
+  const rows = [];
 
   for (const f of tmpl.items) {
     const food    = DB.foods.find(fd => fd.name === f.name);
@@ -3889,18 +3885,12 @@ async function logMealTemplate() {
     };
 
     DB.meals.push(entry);
-    totalCal   += entry.cal;
-    totalPro   += entry.pro;
-    totalCarbs += entry.carbs;
-    totalFat   += entry.fat;
-    itemCount++;
-
-    await syncToSheets({
-      sheet: 'Meals', action: 'append',
-      row: [entry.id, today(), tmpl.mealType, food.name, serving,
-            entry.cal, entry.pro, entry.carbs, entry.fat, entry.fiber, ts]
-    });
+    rows.push([entry.id, today(), tmpl.mealType, food.name, serving,
+               entry.cal, entry.pro, entry.carbs, entry.fat, entry.fiber, ts]);
   }
+
+  // One background call for the whole template — UI updates immediately
+  if (rows.length) syncToSheets({ sheet: 'Meals', action: 'append_rows', rows });
 
   saveDB(DB);
   invalidateCache(['home','dashboard','meals']);
@@ -3914,7 +3904,7 @@ async function deleteMeal(id) {
   DB.meals = DB.meals.filter(m => m.id !== id);
   saveDB(DB);
   invalidateCache(['home','dashboard','meals']);
-  await syncToSheets({sheet:'Meals', action:'delete', id});
+  syncToSheets({sheet:'Meals', action:'delete', id});
   renderMealsPage();
   renderDashboard();
   toast('Deleted');
@@ -5062,7 +5052,7 @@ async function saveSettings() {
     ['waterTarget',   s.waterTarget,   ts],
   ];
 
-  await syncToSheets({ sheet: 'Settings', action: 'replace_all', rows });
+  syncToSheets({ sheet: 'Settings', action: 'replace_all', rows });
   toast('✅ Targets saved!');
 
   // Return to Settings page
@@ -5724,7 +5714,7 @@ async function saveBodyFromModal() {
   saveDB(DB);
   invalidateCache(['home', 'dashboard']);
 
-  await syncToSheets({
+  syncToSheets({
     sheet: 'Body', action: 'append',
     row: [id, t, weight, '', '', '', '', '', notes, ts]
   });
