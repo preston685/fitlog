@@ -11,7 +11,7 @@
 <link rel="icon" type="image/svg+xml" href="fitlog-icon.svg">
 <link rel="apple-touch-icon" href="fitlog-icon.svg">
 <title>FitLog</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.7.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css">
 <style>
 :root {
   /* ── WARM PALETTE (DARK DEFAULT) ── */
@@ -2553,6 +2553,14 @@ function renderPage(name) {
 }
 
 // TOAST
+// Surface unexpected JS errors as toasts — there's no devtools on mobile
+window.addEventListener('error', e => {
+  try { toast('⚠️ JS error: ' + (e.message || 'Script error') + (e.lineno ? ' @' + e.lineno : '')); } catch(_) {}
+});
+window.addEventListener('unhandledrejection', e => {
+  try { toast('⚠️ Async error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)); } catch(_) {}
+});
+
 let _toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('toast');
