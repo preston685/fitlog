@@ -4987,6 +4987,21 @@ async function loadAllDataFromSheets() {
         workoutType: r.workoutType || '',
         exercises:   (() => { try { return JSON.parse(r.exercises || '[]'); } catch(e) { return []; } })(),
       }));
+      // The WorkoutTemplates sheet only stores id/name/type/exercises —
+      // re-attach presentation fields (icon, color, focus, rest) from the
+      // local/default copies so they aren't lost in the round-trip.
+      wt.forEach(t => {
+        const local = TEMPLATES.find(x => x.id === t.id) || DEFAULT_TEMPLATES.find(x => x.id === t.id);
+        if (local) {
+          t.icon  = local.icon  || t.icon;
+          t.color = local.color || t.color;
+          t.focus = local.focus || t.focus;
+          t.rest  = !!local.rest;
+        }
+        if (!t.icon)  t.icon  = EXL_TYPE_ICONS[t.workoutType] || '💪';
+        if (!t.color) t.color = '#5b94f7';
+        if (!t.focus) t.focus = '';
+      });
       if (wt.length) { TEMPLATES = wt; saveTemplates_local(wt); }
     } else if (TEMPLATES.length) {
       setTimeout(() => syncWorkoutTemplatesToSheets(), 1600);
